@@ -42,8 +42,6 @@ public class DilkSysGPSService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         handleCommand(intent);
-        // We want this service to continue running until it is explicitly
-        // stopped, so return sticky.
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new MyLocationListener();
@@ -69,7 +67,8 @@ public class DilkSysGPSService extends Service {
     private class MyLocationListener implements LocationListener {
         @Override
         public void onLocationChanged(Location location) {
-            Log.d("g53mdp", location.getLatitude() + " " + location.getLongitude());
+//            Log.d("g53mdp", location.getLatitude() + " " + location.getLongitude());
+            //Log entry to DB here (and send broadcast?!?!)
         }
 
         @Override
