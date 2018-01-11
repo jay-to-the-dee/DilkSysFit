@@ -1,8 +1,13 @@
 package com.jonathandilks.dilksysfit;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -11,13 +16,15 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
     private TextView mTextMessage;
+    private Menu menu;
+    Intent dilkSysGPSServiceIntent;
+    DataUpdateReceiver dataUpdateReceiver;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -48,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        checkPermissionAndStartGPSservice();
+        dilkSysGPSServiceIntent = new Intent(this, DilkSysGPSService.class);
     }
 
     private void checkPermissionAndStartGPSservice() {
@@ -59,17 +66,11 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     MainActivity.MY_PERMISSIONS_REQUEST_FINE_LOCATION);
-        }
-        else
-        {
-            startDilksGPSService();
+        } else {
+            startService(dilkSysGPSServiceIntent);
         }
     }
 
-    private void startDilksGPSService() {
-        Intent intent = new Intent(this, DilkSysGPSService.class);
-        startService(intent);
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -80,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     //Sweet! We are good to go! Alles ist gut!
 
-                    startDilksGPSService();
+                    startService(dilkSysGPSServiceIntent);
                 } else {
                     Toast.makeText(this, R.string.error_no_gps_permission, Toast.LENGTH_LONG).show();
                     finish(); //Close the app as it won't work. User will see error message.
@@ -93,8 +94,66 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.gps_recording_menu, menu);
+        this.menu = menu;
         return true;
     }
 
 
+    public void recordStartClicked(MenuItem item) {
+        item.setEnabled(false);
+        item.getIcon().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN); //Disable until next update
+
+        checkPermissionAndStartGPSservice();
+    }
+
+    public void recordStopClicked(MenuItem item) {
+        item.setEnabled(false);
+        item.getIcon().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN);  //Disable until next update
+
+        stopService(dilkSysGPSServiceIntent);
+    }
+
+    public void updateGpsRecordUI(boolean enabled) {
+        MenuItem gpsRecordStart = menu.findItem(R.id.gps_record_start);
+        MenuItem gpsRecordStop = menu.findItem(R.id.gps_record_stop);
+
+        gpsRecordStart.setVisible(enabled);
+        gpsRecordStop.setVisible(!enabled);
+
+        gpsRecordStop.setEnabled(!enabled);
+        gpsRecordStart.setEnabled(enabled);
+
+        gpsRecordStop.getIcon().clearColorFilter(); //Clear any pre-existing colour filters
+        gpsRecordStart.getIcon().clearColorFilter();
+    }
+
+    protected void onResume() {
+        super.onResume();
+        if (dataUpdateReceiver == null)
+            dataUpdateReceiver = new DataUpdateReceiver();
+        IntentFilter intentFilterStart = new IntentFilter(DilkSysGPSServiceTask.SERVICE_STARTED);
+        registerReceiver(dataUpdateReceiver, intentFilterStart);
+//        IntentFilter intentFilterStop = new IntentFilter(DilkSysGPSServiceTask.SERVICE_STOPPED);
+//        registerReceiver(dataUpdateReceiver, intentFilterStop);
+    }
+
+    protected void onPause() {
+        super.onPause();
+        if (dataUpdateReceiver != null) unregisterReceiver(dataUpdateReceiver);
+    }
+
+    private class DataUpdateReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case DilkSysGPSServiceTask.SERVICE_STARTED:
+                    Toast.makeText(context, "yeah lol", Toast.LENGTH_LONG).show();
+                    updateGpsRecordUI(true); //TODO: Handle in UI thread
+                    break;
+                case DilkSysGPSServiceTask.SERVICE_STOPPED:
+                    updateGpsRecordUI(false); //TODO: Handle in UI thread
+                    break;
+            }
+        }
+    }
 }

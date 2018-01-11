@@ -1,17 +1,12 @@
 package com.jonathandilks.dilksysfit;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.location.Location;
 import android.location.LocationManager;
@@ -36,6 +31,8 @@ public class DilkSysGPSService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STOPPED);
+        sendBroadcast(startIntent);
         Toast.makeText(this, "Service Destroyed", Toast.LENGTH_LONG).show();
     }
 
@@ -54,6 +51,8 @@ public class DilkSysGPSService extends Service {
             Log.d(getResources().getString(R.string.app_name), e.toString());
         }
 
+        Intent stopIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
+        sendBroadcast(stopIntent);
         return START_STICKY;
     }
 

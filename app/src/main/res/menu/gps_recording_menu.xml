@@ -6,7 +6,8 @@
         android:id="@+id/gps_record_start"
         android:icon="@drawable/ic_media_play"
         android:title="@string/gps_record_start"
-        app:showAsAction="always" />
+        app:showAsAction="always"
+        android:onClick="recordStartClicked"/>
 
     <item
         android:id="@+id/gps_record_stop"
@@ -14,7 +15,8 @@
         android:icon="@drawable/ic_media_stop"
         android:title="@string/gps_record_stop"
         android:visible="false"
-        app:showAsAction="always" />
+        app:showAsAction="always"
+        android:onClick="recordStopClicked"/>
 
 
 </menu>
