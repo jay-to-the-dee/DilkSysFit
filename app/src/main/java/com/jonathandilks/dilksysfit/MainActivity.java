@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -23,8 +24,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
     private TextView mTextMessage;
     private Menu menu;
-    Intent dilkSysGPSServiceIntent;
-    DataUpdateReceiver dataUpdateReceiver;
+    private Intent dilkSysGPSServiceIntent;
+    private UIUpdateReceiver uiUpdateReceiver;
+    private Handler h = new Handler();
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -113,45 +115,53 @@ public class MainActivity extends AppCompatActivity {
         stopService(dilkSysGPSServiceIntent);
     }
 
-    public void updateGpsRecordUI(boolean enabled) {
-        MenuItem gpsRecordStart = menu.findItem(R.id.gps_record_start);
-        MenuItem gpsRecordStop = menu.findItem(R.id.gps_record_stop);
-
-        gpsRecordStart.setVisible(enabled);
-        gpsRecordStop.setVisible(!enabled);
-
-        gpsRecordStop.setEnabled(!enabled);
-        gpsRecordStart.setEnabled(enabled);
-
-        gpsRecordStop.getIcon().clearColorFilter(); //Clear any pre-existing colour filters
-        gpsRecordStart.getIcon().clearColorFilter();
-    }
-
     protected void onResume() {
         super.onResume();
-        if (dataUpdateReceiver == null)
-            dataUpdateReceiver = new DataUpdateReceiver();
-        IntentFilter intentFilterStart = new IntentFilter(DilkSysGPSServiceTask.SERVICE_STARTED);
-        registerReceiver(dataUpdateReceiver, intentFilterStart);
-//        IntentFilter intentFilterStop = new IntentFilter(DilkSysGPSServiceTask.SERVICE_STOPPED);
-//        registerReceiver(dataUpdateReceiver, intentFilterStop);
+        if (uiUpdateReceiver == null)
+            uiUpdateReceiver = new UIUpdateReceiver();
+        IntentFilter intentFilter = new IntentFilter(DilkSysGPSServiceTask.SERVICE_STARTED);
+        intentFilter.addAction(DilkSysGPSServiceTask.SERVICE_STOPPED);
+        registerReceiver(uiUpdateReceiver, intentFilter);
     }
 
     protected void onPause() {
         super.onPause();
-        if (dataUpdateReceiver != null) unregisterReceiver(dataUpdateReceiver);
+        if (uiUpdateReceiver != null) unregisterReceiver(uiUpdateReceiver);
     }
 
-    private class DataUpdateReceiver extends BroadcastReceiver {
+    private class UIUpdateReceiver extends BroadcastReceiver {
+        public void updateGpsRecordUI(boolean enabled) {
+            MenuItem gpsRecordStart = menu.findItem(R.id.gps_record_start);
+            MenuItem gpsRecordStop = menu.findItem(R.id.gps_record_stop);
+
+            gpsRecordStart.setVisible(enabled);
+            gpsRecordStop.setVisible(!enabled);
+
+            gpsRecordStop.setEnabled(!enabled);
+            gpsRecordStart.setEnabled(enabled);
+
+            gpsRecordStop.getIcon().clearColorFilter(); //Clear any pre-existing colour filters
+            gpsRecordStart.getIcon().clearColorFilter();
+        }
+
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
                 case DilkSysGPSServiceTask.SERVICE_STARTED:
-                    Toast.makeText(context, "yeah lol", Toast.LENGTH_LONG).show();
-                    updateGpsRecordUI(true); //TODO: Handle in UI thread
+                    h.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateGpsRecordUI(false);
+                        }
+                    });
                     break;
                 case DilkSysGPSServiceTask.SERVICE_STOPPED:
-                    updateGpsRecordUI(false); //TODO: Handle in UI thread
+                    h.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateGpsRecordUI(true);
+                        }
+                    });
                     break;
             }
         }

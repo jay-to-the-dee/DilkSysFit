@@ -22,23 +22,12 @@ public class DilkSysGPSService extends Service {
     private final IBinder binder = new DilkSysGPSServiceBinder();
     private MyLocationListener locationListener;
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return binder;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STOPPED);
-        sendBroadcast(startIntent);
-        Toast.makeText(this, "Service Destroyed", Toast.LENGTH_LONG).show();
-    }
-
-    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        handleCommand(intent);
+        return START_STICKY;
+    }
+
+    @Override
+    public void onCreate() {
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new MyLocationListener();
@@ -51,12 +40,24 @@ public class DilkSysGPSService extends Service {
             Log.d(getResources().getString(R.string.app_name), e.toString());
         }
 
-        Intent stopIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
-        sendBroadcast(stopIntent);
-        return START_STICKY;
+        Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
+        sendBroadcast(startIntent);
+        Toast.makeText(this, "Service Started", Toast.LENGTH_LONG).show();
     }
 
-    private void handleCommand(Intent intent) {
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        Intent stopIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STOPPED);
+        sendBroadcast(stopIntent);
+        Toast.makeText(this, "Service Destroyed", Toast.LENGTH_LONG).show();
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
     }
 
     private class DilkSysGPSServiceBinder extends Binder {
@@ -72,19 +73,19 @@ public class DilkSysGPSService extends Service {
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-        // information about the signal, i.e. number of satellites
+            // information about the signal, i.e. number of satellites
             Log.d("g53mdp", "onStatusChanged: " + provider + " " + status);
         }
 
         @Override
         public void onProviderEnabled(String provider) {
-        // the user enabled (for example) the GPS
+            // the user enabled (for example) the GPS
             Log.d("g53mdp", "onProviderEnabled: " + provider);
         }
 
         @Override
         public void onProviderDisabled(String provider) {
-        // the user disabled (for example) the GPS
+            // the user disabled (for example) the GPS
             Log.d("g53mdp", "onProviderDisabled: " + provider);
         }
     }
