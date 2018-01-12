@@ -117,8 +117,12 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onResume() {
         super.onResume();
+
+        //TODO: Find a way to get current service running status
+
         if (uiUpdateReceiver == null)
             uiUpdateReceiver = new UIUpdateReceiver();
+
         IntentFilter intentFilter = new IntentFilter(DilkSysGPSServiceTask.SERVICE_STARTED);
         intentFilter.addAction(DilkSysGPSServiceTask.SERVICE_STOPPED);
         registerReceiver(uiUpdateReceiver, intentFilter);

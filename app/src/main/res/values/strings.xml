@@ -8,4 +8,6 @@
     <string name="gps_record_stop">Stop Tracking</string>
     <string name="error_no_gps_permission">You need to enable location for this app to work! :(</string>
     <string name="please_enable_location_services">Please enable all GPS/Location Services for best available accuracy.</string>
+    <string name="notification_title">DilkSysFit is now recording your run</string>
+    <string name="notification_explanation">DilkSysFit is now tracking and record your GPS location as you move.</string>
 </resources>

@@ -1,16 +1,19 @@
 package com.jonathandilks.dilksysfit;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.location.Location;
-import android.location.LocationManager;
-import android.location.LocationListener;
 import android.widget.Toast;
 
 
@@ -19,10 +22,14 @@ import android.widget.Toast;
  */
 
 public class DilkSysGPSService extends Service {
+    private static final int FOREGROUND_NOTIFICATION_ID = 1;
     private final IBinder binder = new DilkSysGPSServiceBinder();
     private MyLocationListener locationListener;
 
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
+        sendBroadcast(startIntent); //TODO: Temporary workaround before we move to onCreate
+
         return START_STICKY;
     }
 
@@ -40,9 +47,16 @@ public class DilkSysGPSService extends Service {
             Log.d(getResources().getString(R.string.app_name), e.toString());
         }
 
-        Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
-        sendBroadcast(startIntent);
-        Toast.makeText(this, "Service Started", Toast.LENGTH_LONG).show();
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        Notification notification =
+                new Notification.Builder(this)
+                        .setContentTitle(getText(R.string.notification_title))
+                        .setSmallIcon(R.mipmap.ic_launcher_round)
+                        .setContentIntent(pendingIntent)
+                        .build();
+        startForeground(FOREGROUND_NOTIFICATION_ID, notification);
     }
 
     @Override
@@ -68,6 +82,14 @@ public class DilkSysGPSService extends Service {
         @Override
         public void onLocationChanged(Location location) {
             //Log entry to DB here (and send broadcast?!?!)
+
+            ContentValues values = new ContentValues();
+            values.put(RunDBContract.RUN_LATITUDE, location.getLatitude());
+            values.put(RunDBContract.RUN_LONGITUDE, location.getLongitude());
+            values.put(RunDBContract.RUN_ALTITUDE, location.getAltitude());
+
+            getContentResolver().insert(RunDBContract.URI, values);
+
         }
 
         @Override
