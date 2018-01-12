@@ -67,26 +67,22 @@ public class DilkSysGPSService extends Service {
     private class MyLocationListener implements LocationListener {
         @Override
         public void onLocationChanged(Location location) {
-//            Log.d("g53mdp", location.getLatitude() + " " + location.getLongitude());
             //Log entry to DB here (and send broadcast?!?!)
         }
 
         @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-            // information about the signal, i.e. number of satellites
-            Log.d("g53mdp", "onStatusChanged: " + provider + " " + status);
+        public void onStatusChanged(String s, int i, Bundle bundle) {
         }
 
         @Override
-        public void onProviderEnabled(String provider) {
-            // the user enabled (for example) the GPS
-            Log.d("g53mdp", "onProviderEnabled: " + provider);
+        public void onProviderEnabled(String s) {
         }
 
         @Override
-        public void onProviderDisabled(String provider) {
-            // the user disabled (for example) the GPS
-            Log.d("g53mdp", "onProviderDisabled: " + provider);
+        public void onProviderDisabled(String provider)
+        {
+            Context context = getApplicationContext();
+            Toast.makeText(context, context.getString(R.string.please_enable_location_services), Toast.LENGTH_LONG).show();
         }
     }
 }
