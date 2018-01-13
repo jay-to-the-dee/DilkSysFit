@@ -7,4 +7,5 @@ package com.jonathandilks.dilksysfit;
 class DilkSysGPSServiceTask {
     public static final String SERVICE_STARTED = "dilkSysGPSService_task.service_start";
     public static final String SERVICE_STOPPED = "dilkSysGPSService_task.service_stop";
+
 }

@@ -7,8 +7,10 @@ public class RunDBContract {
 
     public static final Uri URI = Uri.parse("content://" + AUTHORITY);
     public static final Uri ALL_URI = Uri.parse("content://" + AUTHORITY + "/*");
+    public static final Uri LASTRUNID_URI = Uri.parse("content://" + AUTHORITY + "/lastRunID");
 
     public static final String _ID = "_id";
+    public static final String RUN_RUNID = "runID";
     public static final String RUN_TIMESTAMP = "timestamp";
     public static final String RUN_LATITUDE = "lat";
     public static final String RUN_LONGITUDE = "lng";

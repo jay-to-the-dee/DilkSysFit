@@ -11,13 +11,14 @@ import android.database.sqlite.SQLiteDatabase;
 
 class DBHelper extends SQLiteOpenHelper {
     public DBHelper(Context context) {
-        super(context, "recipeDB", null, 7);
+        super(context, "runsDB", null, 7);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE runs " +
-                "(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "(_pointid INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "runID INTEGER, " +
                 "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, " +
                 "lat FLOAT(10, 6) NOT NULL , " +
                 "lng FLOAT(10, 6) NOT NULL , " +

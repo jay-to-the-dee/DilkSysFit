@@ -6,13 +6,16 @@ import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -24,19 +27,38 @@ import android.widget.Toast;
 public class DilkSysGPSService extends Service {
     private static final int FOREGROUND_NOTIFICATION_ID = 1;
     private final IBinder binder = new DilkSysGPSServiceBinder();
+    private LocationManager locationManager;
     private MyLocationListener locationListener;
+    private int runID;
 
     public int onStartCommand(Intent intent, int flags, int startId) {
         Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
-        sendBroadcast(startIntent); //TODO: Temporary workaround before we move to onCreate
+        LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent); //TODO: Temporary workaround before we move to onCreate
+
+        runID = getLastRunId() + 1;
 
         return START_STICKY;
+    }
+
+    private int getLastRunId() {
+        int lastRunId;
+
+        Cursor c = getContentResolver().query(RunDBContract.LASTRUNID_URI, null, null, null, null);
+        if (c.moveToFirst()) {
+            lastRunId = c.getInt(c.getColumnIndexOrThrow(RunDBContract.RUN_RUNID));
+        } else {
+            lastRunId = 0; //We'll assume it's the first run ever
+            Log.d("DilkSysFit", "Last run not found - is this our first time running?");
+        }
+        c.close();
+
+        return lastRunId;
     }
 
     @Override
     public void onCreate() {
 
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new MyLocationListener();
         try {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
@@ -63,9 +85,10 @@ public class DilkSysGPSService extends Service {
     public void onDestroy() {
         super.onDestroy();
 
+        locationManager.removeUpdates(locationListener); //Stop adding new entries to the database
+
         Intent stopIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STOPPED);
-        sendBroadcast(stopIntent);
-        Toast.makeText(this, "Service Destroyed", Toast.LENGTH_LONG).show();
+        LocalBroadcastManager.getInstance(this).sendBroadcast(stopIntent);
     }
 
     @Nullable
@@ -84,12 +107,13 @@ public class DilkSysGPSService extends Service {
             //Log entry to DB here (and send broadcast?!?!)
 
             ContentValues values = new ContentValues();
+            values.put(RunDBContract.RUN_RUNID, runID);
             values.put(RunDBContract.RUN_LATITUDE, location.getLatitude());
             values.put(RunDBContract.RUN_LONGITUDE, location.getLongitude());
             values.put(RunDBContract.RUN_ALTITUDE, location.getAltitude());
 
             getContentResolver().insert(RunDBContract.URI, values);
-
+//            getContentResolver().notifyChange(insertUri, null);
         }
 
         @Override
@@ -101,8 +125,7 @@ public class DilkSysGPSService extends Service {
         }
 
         @Override
-        public void onProviderDisabled(String provider)
-        {
+        public void onProviderDisabled(String provider) {
             Context context = getApplicationContext();
             Toast.makeText(context, context.getString(R.string.please_enable_location_services), Toast.LENGTH_LONG).show();
         }

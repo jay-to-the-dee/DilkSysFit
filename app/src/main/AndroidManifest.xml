@@ -27,7 +27,7 @@
             android:exported="false" />
         <provider
             android:name=".RunDBProvider"
-            android:authorities="com.jonathandilks.dilksyrecipes.RunDBProvider"
+            android:authorities="com.jonathandilks.dilksysfit.RunDBProvider"
             android:exported="false" />
     </application>
 

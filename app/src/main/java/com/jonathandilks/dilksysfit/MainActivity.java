@@ -6,15 +6,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.ContentObserver;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -26,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private Menu menu;
     private Intent dilkSysGPSServiceIntent;
     private UIUpdateReceiver uiUpdateReceiver;
+    private ContentObserver runUpdateObserver;
     private Handler h = new Handler();
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -122,15 +127,23 @@ public class MainActivity extends AppCompatActivity {
 
         if (uiUpdateReceiver == null)
             uiUpdateReceiver = new UIUpdateReceiver();
-
         IntentFilter intentFilter = new IntentFilter(DilkSysGPSServiceTask.SERVICE_STARTED);
         intentFilter.addAction(DilkSysGPSServiceTask.SERVICE_STOPPED);
-        registerReceiver(uiUpdateReceiver, intentFilter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(uiUpdateReceiver, intentFilter);
+
+        if (runUpdateObserver == null)
+            runUpdateObserver = new RunUpdateObserver(new Handler());
+
+        getContentResolver().registerContentObserver(RunDBContract.ALL_URI, true, runUpdateObserver);
     }
 
     protected void onPause() {
         super.onPause();
-        if (uiUpdateReceiver != null) unregisterReceiver(uiUpdateReceiver);
+        if (uiUpdateReceiver != null)
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(uiUpdateReceiver);
+
+        if (runUpdateObserver != null)
+            getContentResolver().unregisterContentObserver(runUpdateObserver);
     }
 
     private class UIUpdateReceiver extends BroadcastReceiver {
@@ -168,6 +181,24 @@ public class MainActivity extends AppCompatActivity {
                     });
                     break;
             }
+        }
+    }
+
+    private class RunUpdateObserver extends ContentObserver {
+
+        /**
+         * Creates a content observer.
+         *
+         * @param handler The handler to run {@link #onChange} on, or null if none.
+         */
+        public RunUpdateObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            super.onChange(selfChange, uri);
+            Log.d("onChange", uri.getQuery());
         }
     }
 }
