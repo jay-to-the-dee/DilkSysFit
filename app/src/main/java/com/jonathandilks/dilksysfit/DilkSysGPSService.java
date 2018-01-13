@@ -45,13 +45,14 @@ public class DilkSysGPSService extends Service {
 
         Cursor c = getContentResolver().query(RunDBContract.LASTRUNID_URI, null, null, null, null);
         if (c.moveToFirst()) {
-            lastRunId = c.getInt(c.getColumnIndexOrThrow(RunDBContract.RUN_RUNID));
+            lastRunId = c.getInt(c.getColumnIndex(RunDBContract.RUN_RUNID));
         } else {
             lastRunId = 0; //We'll assume it's the first run ever
             Log.d("DilkSysFit", "Last run not found - is this our first time running?");
         }
         c.close();
 
+        Log.d("lastRunId", String.valueOf(lastRunId));
         return lastRunId;
     }
 

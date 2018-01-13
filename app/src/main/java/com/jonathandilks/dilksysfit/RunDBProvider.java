@@ -18,9 +18,9 @@ public class RunDBProvider extends ContentProvider {
 
     static {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        uriMatcher.addURI(RunDBContract.AUTHORITY, "#", 1);
-        uriMatcher.addURI(RunDBContract.AUTHORITY, "*", 2);
-        uriMatcher.addURI(RunDBContract.AUTHORITY, "lastRunID", 3);
+        uriMatcher.addURI(RunDBContract.AUTHORITY, "lastEntry", 1);
+        uriMatcher.addURI(RunDBContract.AUTHORITY, "#", 2);
+        uriMatcher.addURI(RunDBContract.AUTHORITY, "*", 3);
     }
 
     @Override
@@ -36,15 +36,16 @@ public class RunDBProvider extends ContentProvider {
 
         switch (uriMatcher.match(uri)) {
             case 1:
-                selection = "_ID = " + uri.getLastPathSegment();
-            case 2:
-                return db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
-            case 3:
-                String allCols[] = new String[]
+                String projectionCols[] = new String[]
                         {
+                                RunDBContract._POINTID,
                                 RunDBContract.RUN_RUNID
                         };
-                return db.query(TABLE_NAME, allCols, selection, selectionArgs, null, null, "DESC", "1");
+                return db.query(TABLE_NAME, projectionCols, null, null, null, null, RunDBContract._POINTID + " DESC", "1");
+            case 2:
+                selection = RunDBContract.RUN_RUNID + " = " + uri.getLastPathSegment();
+            case 3:
+                return db.query(TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
             default:
                 return null;
         }
@@ -83,7 +84,7 @@ public class RunDBProvider extends ContentProvider {
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        selection = "_ID = " + uri.getLastPathSegment();
+        selection = "_POINTID = " + uri.getLastPathSegment();
         return db.update(TABLE_NAME, values, selection, selectionArgs);
     }
 }
