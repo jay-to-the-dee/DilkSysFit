@@ -41,6 +41,7 @@ public class DilkSysGPSService extends Service {
     private MyLocationListener locationListener;
 
     private int mRunID;
+    private int mCumPointsTracked;
     private float mCumDistanceTravelled;
     private Location mLastLocation;
     private Date mStartTime;
@@ -48,6 +49,7 @@ public class DilkSysGPSService extends Service {
 
     public int onStartCommand(Intent intent, int flags, int startId) {
         mRunID = getLastRunId() + 1;
+        mCumPointsTracked = 0;
         mCumDistanceTravelled = 0;
         mStartTime = new Date();
 
@@ -81,7 +83,9 @@ public class DilkSysGPSService extends Service {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                     5,
                     5,
-                    (LocationListener) locationListener);
+                    locationListener);
+
+            locationListener.onLocationChanged(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)); //Trigger first point on record start
         } catch (SecurityException e) {
             Log.d(getResources().getString(R.string.app_name), e.toString());
         }
@@ -103,7 +107,9 @@ public class DilkSysGPSService extends Service {
         super.onDestroy();
 
         locationManager.removeUpdates(locationListener); //Stop adding new entries to the database
-        generateSummaryEntry();
+        if (mCumPointsTracked > 1) { //Don't add empty runs
+            generateSummaryEntry();
+        }
 
         Intent stopIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STOPPED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(stopIntent);
@@ -184,6 +190,7 @@ public class DilkSysGPSService extends Service {
                 mCumDistanceTravelled += location.distanceTo(mLastLocation);
             }
             mLastLocation = location;
+            mCumPointsTracked++;
         }
 
         @Override

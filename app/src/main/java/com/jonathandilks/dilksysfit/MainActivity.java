@@ -24,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView mNavigation;
     private MenuItem mGPSRecordStartButton;
     private MenuItem mGPSRecordStopButton;
+    private SimpleCursorAdapter mCursorAdapter;
 
     private Intent dilkSysGPSServiceIntent;
     private UIUpdateReceiver uiUpdateReceiver;
@@ -78,6 +80,25 @@ public class MainActivity extends AppCompatActivity {
         mSummaryText = findViewById(R.id.summary_text);
         mMapLayout = findViewById(R.id.map_layout);
         mRunList = findViewById(R.id.run_list);
+
+        String displayCols[] = new String[]
+                {
+                        RunDBContract.RUN_SUMMARIES_NAME,
+                        RunDBContract.RUN_SUMMARIES_FINISH_LOCATION_NAME
+                };
+        int[] colResolutionIds = new int[]
+                {
+                        R.id.runNameEntry,
+                        R.id.approximateLocationEntry
+                };
+
+        mCursorAdapter = new SimpleCursorAdapter(this,
+                R.layout.run_history_list_layout,
+                getContentResolver().query(RunDBContract.RUN_SUMMARIES_URI, RunDBContract.allColsRunSummary,null,null,null),
+                displayCols,
+                colResolutionIds,
+                0);
+        mRunList.setAdapter(mCursorAdapter);
 
         //Variable setting
         mNavigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
