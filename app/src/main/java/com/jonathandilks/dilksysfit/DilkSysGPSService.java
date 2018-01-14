@@ -34,6 +34,9 @@ public class DilkSysGPSService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         runID = getLastRunId() + 1;
 
+        Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent);
+
         return START_STICKY;
     }
 
@@ -73,13 +76,10 @@ public class DilkSysGPSService extends Service {
         Notification notification =
                 new Notification.Builder(this)
                         .setContentTitle(getText(R.string.notification_title))
-                        .setSmallIcon(R.mipmap.ic_launcher_round)
+                        .setSmallIcon(R.drawable.ic_directions_run_white_48dp)
                         .setContentIntent(pendingIntent)
                         .build();
         startForeground(FOREGROUND_NOTIFICATION_ID, notification);
-
-        Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent);
     }
 
     @Override
