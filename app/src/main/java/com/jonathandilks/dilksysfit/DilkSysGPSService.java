@@ -32,9 +32,6 @@ public class DilkSysGPSService extends Service {
     private int runID;
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent); //TODO: Temporary workaround before we move to onCreate
-
         runID = getLastRunId() + 1;
 
         return START_STICKY;
@@ -80,6 +77,9 @@ public class DilkSysGPSService extends Service {
                         .setContentIntent(pendingIntent)
                         .build();
         startForeground(FOREGROUND_NOTIFICATION_ID, notification);
+
+        Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent);
     }
 
     @Override

@@ -23,40 +23,46 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
+    private static final String READY_TO_RECORD = "readyToRecord";
 
-    private TextView mTextMessage;
+    private TextView mSummaryText;
     private LinearLayout mMapLayout;
+    private ListView mRunList;
+    private BottomNavigationView mNavigation;
+    private MenuItem mGPSRecordStartButton;
+    private MenuItem mGPSRecordStopButton;
 
-    private Menu menu;
     private Intent dilkSysGPSServiceIntent;
     private UIUpdateReceiver uiUpdateReceiver;
     private ContentObserver runUpdateObserver;
     private Handler h = new Handler();
+    private boolean readyToRecord = true;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            mTextMessage.setVisibility(View.GONE);
+            mSummaryText.setVisibility(View.GONE);
             mMapLayout.setVisibility(View.GONE);
+            mRunList.setVisibility(View.GONE);
 
             switch (item.getItemId()) {
                 case R.id.navigation_home:
-                    mTextMessage.setVisibility(View.VISIBLE);
-                    mTextMessage.setText(R.string.title_home);
+                    mSummaryText.setVisibility(View.VISIBLE);
+                    mSummaryText.setText(R.string.title_home);
                     return true;
                 case R.id.navigation_current_run:
                     mMapLayout.setVisibility(View.VISIBLE);
                     return true;
                 case R.id.navigation_run_history:
-                    mTextMessage.setVisibility(View.VISIBLE);
-                    mTextMessage.setText(R.string.title_run_history);
+                    mRunList.setVisibility(View.VISIBLE);
                     return true;
             }
             return false;
@@ -68,11 +74,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mTextMessage = (TextView) findViewById(R.id.message);
+        mNavigation = findViewById(R.id.navigation);
+        mSummaryText = findViewById(R.id.summary_text);
         mMapLayout = findViewById(R.id.map_layout);
-        BottomNavigationView navigation = findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        mRunList = findViewById(R.id.run_list);
 
+        //Variable setting
+        mNavigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         dilkSysGPSServiceIntent = new Intent(this, DilkSysGPSService.class);
     }
 
@@ -112,7 +120,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.gps_recording_menu, menu);
-        this.menu = menu;
+        mGPSRecordStartButton = menu.findItem(R.id.gps_record_start);
+        mGPSRecordStopButton = menu.findItem(R.id.gps_record_stop);
+        updateGpsRecordUI(readyToRecord);
         return true;
     }
 
@@ -157,21 +167,32 @@ public class MainActivity extends AppCompatActivity {
             getContentResolver().unregisterContentObserver(runUpdateObserver);
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(READY_TO_RECORD, readyToRecord);
+        super.onSaveInstanceState(outState);
+    }
+
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        readyToRecord = savedInstanceState.getBoolean(READY_TO_RECORD);
+        mNavigation.setSelectedItemId(mNavigation.getSelectedItemId());
+    }
+
+    private void updateGpsRecordUI(boolean readyToRecord) {
+        this.readyToRecord = readyToRecord;
+
+        mGPSRecordStartButton.setVisible(readyToRecord);
+        mGPSRecordStopButton.setVisible(!readyToRecord);
+
+        mGPSRecordStartButton.setEnabled(readyToRecord);
+        mGPSRecordStopButton.setEnabled(!readyToRecord);
+
+        mGPSRecordStartButton.getIcon().clearColorFilter(); //Clear any pre-existing colour filters
+        mGPSRecordStopButton.getIcon().clearColorFilter();
+    }
+
     private class UIUpdateReceiver extends BroadcastReceiver {
-        public void updateGpsRecordUI(boolean enabled) {
-            MenuItem gpsRecordStart = menu.findItem(R.id.gps_record_start);
-            MenuItem gpsRecordStop = menu.findItem(R.id.gps_record_stop);
-
-            gpsRecordStart.setVisible(enabled);
-            gpsRecordStop.setVisible(!enabled);
-
-            gpsRecordStop.setEnabled(!enabled);
-            gpsRecordStart.setEnabled(enabled);
-
-            gpsRecordStop.getIcon().clearColorFilter(); //Clear any pre-existing colour filters
-            gpsRecordStart.getIcon().clearColorFilter();
-        }
-
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
