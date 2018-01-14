@@ -18,6 +18,12 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * Created by jonathan on 04/01/18.
@@ -25,13 +31,21 @@ import android.widget.Toast;
 
 public class DilkSysGPSService extends Service {
     private static final int FOREGROUND_NOTIFICATION_ID = 1;
+
     private final IBinder binder = new DilkSysGPSServiceBinder();
     private LocationManager locationManager;
     private MyLocationListener locationListener;
-    private int runID;
+
+    private int mRunID;
+    private float mCumDistanceTravelled;
+    private Location mLastLocation;
+    private Date mStartTime;
+
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        runID = getLastRunId() + 1;
+        mRunID = getLastRunId() + 1;
+        mCumDistanceTravelled = 0;
+        mStartTime = new Date();
 
         Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent);
@@ -85,10 +99,48 @@ public class DilkSysGPSService extends Service {
         super.onDestroy();
 
         locationManager.removeUpdates(locationListener); //Stop adding new entries to the database
-        //TODO: DO SUMMARY GENERATION HERE
+        generateSummaryEntry();
 
         Intent stopIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STOPPED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(stopIntent);
+    }
+
+    private void generateSummaryEntry() {
+        String locationName = "Radford"; //TODO: Get from GPS
+
+        ContentValues values = new ContentValues();
+
+        values.put(RunDBContract.RUN_SUMMARIES_ID, mRunID);
+        values.put(RunDBContract.RUN_SUMMARIES_FINISH_LOCATION_NAME, locationName);
+        values.put(RunDBContract.RUN_SUMMARIES_ID_TOTAL_DISTANCE, mCumDistanceTravelled);
+
+        Date finishTime = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(finishTime);
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE", Locale.UK);
+        String dayString = simpleDateFormat.format(calendar.getTime());
+
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        String TODString;
+        if (hour >= 1 && hour <= 11) {
+            TODString = "Morning";
+        } else if (hour <= 15) {
+            TODString = "Afternoon";
+        } else if (hour <= 20) {
+            TODString = "Evening";
+        } else {
+            TODString = "Night";
+        }
+
+        String defaultSummaryString = dayString + " " + TODString + " run in " + locationName;
+        values.put(RunDBContract.RUN_SUMMARIES_NAME, defaultSummaryString);
+
+        long diffMs = finishTime.getTime() - mStartTime.getTime();
+        long diffSeconds = TimeUnit.MILLISECONDS.toSeconds(diffMs);
+        values.put(RunDBContract.RUN_SUMMARIES_TOTAL_TIME, diffSeconds);
+
+        getContentResolver().insert(RunDBContract.RUN_SUMMARIES_URI, values);
     }
 
     @Nullable
@@ -104,16 +156,18 @@ public class DilkSysGPSService extends Service {
     private class MyLocationListener implements LocationListener {
         @Override
         public void onLocationChanged(Location location) {
-            //Log entry to DB here (and send broadcast?!?!)
-
+            //Log entry to DB here
             ContentValues values = new ContentValues();
-            values.put(RunDBContract.POINT_DATA_RUNID, runID);
+            values.put(RunDBContract.POINT_DATA_RUNID, mRunID);
             values.put(RunDBContract.POINT_DATA_LATITUDE, location.getLatitude());
             values.put(RunDBContract.POINT_DATA_LONGITUDE, location.getLongitude());
             values.put(RunDBContract.POINT_DATA_ALTITUDE, location.getAltitude());
-
             getContentResolver().insert(RunDBContract.POINT_DATA_URI, values);
-//            getContentResolver().notifyChange(insertUri, null);
+
+            if (mLastLocation!=null) {
+                mCumDistanceTravelled += location.distanceTo(mLastLocation);
+            }
+            mLastLocation = location;
         }
 
         @Override
