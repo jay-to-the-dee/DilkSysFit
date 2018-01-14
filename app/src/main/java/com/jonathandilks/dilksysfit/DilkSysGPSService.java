@@ -48,11 +48,6 @@ public class DilkSysGPSService extends Service {
 
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        mRunID = getLastRunId() + 1;
-        mCumPointsTracked = 0;
-        mCumDistanceTravelled = 0;
-        mStartTime = new Date();
-
         Intent startIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STARTED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(startIntent);
 
@@ -79,16 +74,7 @@ public class DilkSysGPSService extends Service {
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new MyLocationListener();
-        try {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    5,
-                    5,
-                    locationListener);
-
-            locationListener.onLocationChanged(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)); //Trigger first point on record start
-        } catch (SecurityException e) {
-            Log.d(getResources().getString(R.string.app_name), e.toString());
-        }
+        Location lastKnownLocation;
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -100,6 +86,21 @@ public class DilkSysGPSService extends Service {
                         .setContentIntent(pendingIntent)
                         .build();
         startForeground(FOREGROUND_NOTIFICATION_ID, notification);
+
+        mRunID = getLastRunId() + 1;
+        mCumPointsTracked = 0;
+        mCumDistanceTravelled = 0;
+        try {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    5,
+                    5,
+                    locationListener);
+            lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            locationListener.onLocationChanged(lastKnownLocation); //Trigger first point on record start
+        } catch (SecurityException | NullPointerException e) {
+            Log.d(getResources().getString(R.string.app_name), e.toString());
+        }
+        mStartTime = new Date();
     }
 
     @Override
@@ -183,7 +184,12 @@ public class DilkSysGPSService extends Service {
             values.put(RunDBContract.POINT_DATA_RUNID, mRunID);
             values.put(RunDBContract.POINT_DATA_LATITUDE, location.getLatitude());
             values.put(RunDBContract.POINT_DATA_LONGITUDE, location.getLongitude());
-            values.put(RunDBContract.POINT_DATA_ALTITUDE, location.getAltitude());
+            if (location.hasAltitude()) { //Don't write it if we don't have it
+                values.put(RunDBContract.POINT_DATA_ALTITUDE, location.getAltitude());
+            }
+            if (location.hasSpeed()) {
+                values.put(RunDBContract.POINT_DATA_SPEED, location.getSpeed()); //Even if we don't use this now - we may in future versions
+            }
             getContentResolver().insert(RunDBContract.POINT_DATA_URI, values);
 
             if (mLastLocation != null) {

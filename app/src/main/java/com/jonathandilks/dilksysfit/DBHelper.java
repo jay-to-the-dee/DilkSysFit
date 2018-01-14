@@ -22,7 +22,8 @@ class DBHelper extends SQLiteOpenHelper {
                 "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, " +
                 "lat FLOAT(10, 6) NOT NULL , " +
                 "lng FLOAT(10, 6) NOT NULL , " +
-                "alt DOUBLE" +
+                "alt DOUBLE," +
+                "speed FLOAT" +
                 ");");
 
         db.execSQL("CREATE TABLE run_summaries " +

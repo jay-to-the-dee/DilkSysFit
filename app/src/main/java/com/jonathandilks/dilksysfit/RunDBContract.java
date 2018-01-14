@@ -16,6 +16,7 @@ public class RunDBContract {
     public static final String POINT_DATA_LATITUDE = "lat";
     public static final String POINT_DATA_LONGITUDE = "lng";
     public static final String POINT_DATA_ALTITUDE = "alt";
+    public static final String POINT_DATA_SPEED = "speed";
 
     public static final String[] allColsPointData = {
             POINT_DATA_ID,
@@ -23,7 +24,8 @@ public class RunDBContract {
             POINT_DATA_TIMESTAMP,
             POINT_DATA_LATITUDE,
             POINT_DATA_LONGITUDE,
-            POINT_DATA_ALTITUDE
+            POINT_DATA_ALTITUDE,
+            POINT_DATA_SPEED
     };
 
     public static final String RUN_SUMMARIES_ID = "_id";
@@ -44,6 +46,4 @@ public class RunDBContract {
 
     public static final String CONTENT_TYPE_SINGLE = "vnd.android.cursor.item/RunDBProvider.data.text";
     public static final String CONTENT_TYPE_MULTIPLE = "vnd.android.cursor.dir/RunDBProvider.data.text";
-
-
 }

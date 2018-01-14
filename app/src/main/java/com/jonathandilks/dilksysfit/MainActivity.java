@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
@@ -18,7 +19,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,6 +27,8 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import javax.xml.datatype.Duration;
 
 public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
@@ -38,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView mNavigation;
     private MenuItem mGPSRecordStartButton;
     private MenuItem mGPSRecordStopButton;
-    private SimpleCursorAdapter mCursorAdapter;
+    private SimpleCursorAdapter mAdapter;
 
     private Intent dilkSysGPSServiceIntent;
     private UIUpdateReceiver uiUpdateReceiver;
@@ -84,21 +86,67 @@ public class MainActivity extends AppCompatActivity {
         String displayCols[] = new String[]
                 {
                         RunDBContract.RUN_SUMMARIES_NAME,
+                        RunDBContract.RUN_SUMMARIES_TOTAL_TIME,
+                        RunDBContract.RUN_SUMMARIES_ID_TOTAL_DISTANCE,
                         RunDBContract.RUN_SUMMARIES_FINISH_LOCATION_NAME
                 };
         int[] colResolutionIds = new int[]
                 {
                         R.id.runNameEntry,
+                        R.id.timeEntry,
+                        R.id.distanceEntry,
                         R.id.approximateLocationEntry
                 };
 
-        mCursorAdapter = new SimpleCursorAdapter(this,
+        Cursor runSummariesCursor = getRunSummariesCursor();
+        mAdapter = new SimpleCursorAdapter(this,
                 R.layout.run_history_list_layout,
-                getContentResolver().query(RunDBContract.RUN_SUMMARIES_URI, RunDBContract.allColsRunSummary,null,null,null),
+                runSummariesCursor,
                 displayCols,
                 colResolutionIds,
-                0);
-        mRunList.setAdapter(mCursorAdapter);
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+
+        mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() { //This is needed to make the formatting nice in the ListView
+            @Override
+            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+                TextView textView = (TextView) view;
+
+                switch (columnIndex) {
+                    case 4: //Time
+                        int timeInSeconds = cursor.getInt(columnIndex);
+                        int timeInMinutes = timeInSeconds / 60;
+                        int timeInHours = timeInMinutes / 60;
+
+                        timeInSeconds = timeInSeconds - (timeInMinutes * 60);
+                        timeInMinutes = timeInMinutes - (timeInHours * 60);
+
+                        if (timeInMinutes == 0 && timeInHours == 0) {
+                            textView.setText(timeInSeconds + "s");
+                        } else if (timeInHours == 0) {
+
+                            textView.setText(timeInMinutes + "m " + timeInSeconds + "s");
+                        } else {
+                            textView.setText(timeInHours + "h " + timeInMinutes + "m " + timeInSeconds + "s");
+                        }
+                        return true;
+
+                    case 5: //Distance
+                        int distanceInMetres = (int) cursor.getFloat(columnIndex);
+                        int distanceInKm = distanceInMetres / 1000;
+
+                        if (distanceInKm == 0) {
+                            textView.setText(distanceInMetres + "m");
+                        } else {
+                            textView.setText(distanceInKm + "km");
+                        }
+                        return true;
+                }
+
+                return false;
+            }
+        });
+
+        mRunList.setAdapter(mAdapter);
 
         //Variable setting
         mNavigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
@@ -213,6 +261,10 @@ public class MainActivity extends AppCompatActivity {
         mGPSRecordStopButton.getIcon().clearColorFilter();
     }
 
+    public Cursor getRunSummariesCursor() {
+        return getContentResolver().query(RunDBContract.RUN_SUMMARIES_URI, RunDBContract.allColsRunSummary, null, null, null);
+    }
+
     private class UIUpdateReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -238,7 +290,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class RunUpdateObserver extends ContentObserver {
-
         /**
          * Creates a content observer.
          *
@@ -252,12 +303,11 @@ public class MainActivity extends AppCompatActivity {
         public void onChange(boolean selfChange, Uri uri) {
             super.onChange(selfChange, uri);
 
-            switch(uri.getPathSegments().get(0))
-            {
+            switch (uri.getPathSegments().get(0)) {
                 case "point_data":
                     //TODO: Implement GUI update on call
                 case "run_summaries":
-                    //TODO: Implement GUI update on call
+                    mAdapter.changeCursor(getRunSummariesCursor());
             }
 
         }
