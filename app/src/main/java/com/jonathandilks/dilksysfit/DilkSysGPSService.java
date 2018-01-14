@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -43,9 +42,9 @@ public class DilkSysGPSService extends Service {
     private int getLastRunId() {
         int lastRunId;
 
-        Cursor c = getContentResolver().query(RunDBContract.LASTRUNID_URI, null, null, null, null);
+        Cursor c = getContentResolver().query(RunDBContract.POINT_DATA_URI_LAST_ENTRY, null, null, null, null);
         if (c.moveToFirst()) {
-            lastRunId = c.getInt(c.getColumnIndex(RunDBContract.RUN_RUNID));
+            lastRunId = c.getInt(c.getColumnIndex(RunDBContract.POINT_DATA_RUNID));
         } else {
             lastRunId = 0; //We'll assume it's the first run ever
             Log.i("DilkSysFit", "Last run not found - is this our first time running?");
@@ -86,6 +85,7 @@ public class DilkSysGPSService extends Service {
         super.onDestroy();
 
         locationManager.removeUpdates(locationListener); //Stop adding new entries to the database
+        //TODO: DO SUMMARY GENERATION HERE
 
         Intent stopIntent = new Intent(DilkSysGPSServiceTask.SERVICE_STOPPED);
         LocalBroadcastManager.getInstance(this).sendBroadcast(stopIntent);
@@ -107,12 +107,12 @@ public class DilkSysGPSService extends Service {
             //Log entry to DB here (and send broadcast?!?!)
 
             ContentValues values = new ContentValues();
-            values.put(RunDBContract.RUN_RUNID, runID);
-            values.put(RunDBContract.RUN_LATITUDE, location.getLatitude());
-            values.put(RunDBContract.RUN_LONGITUDE, location.getLongitude());
-            values.put(RunDBContract.RUN_ALTITUDE, location.getAltitude());
+            values.put(RunDBContract.POINT_DATA_RUNID, runID);
+            values.put(RunDBContract.POINT_DATA_LATITUDE, location.getLatitude());
+            values.put(RunDBContract.POINT_DATA_LONGITUDE, location.getLongitude());
+            values.put(RunDBContract.POINT_DATA_ALTITUDE, location.getAltitude());
 
-            getContentResolver().insert(RunDBContract.URI, values);
+            getContentResolver().insert(RunDBContract.POINT_DATA_URI, values);
 //            getContentResolver().notifyChange(insertUri, null);
         }
 

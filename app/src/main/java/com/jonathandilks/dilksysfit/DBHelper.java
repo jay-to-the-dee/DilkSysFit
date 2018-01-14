@@ -16,13 +16,22 @@ class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE runs " +
-                "(_pointid INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "runID INTEGER, " +
+        db.execSQL("CREATE TABLE point_data " +
+                "(_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "run_id INTEGER, " +
                 "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, " +
                 "lat FLOAT(10, 6) NOT NULL , " +
                 "lng FLOAT(10, 6) NOT NULL , " +
                 "alt DOUBLE" +
+                ");");
+
+        db.execSQL("CREATE TABLE run_summaries " +
+                "(_id INTEGER PRIMARY KEY, " +
+                "name TEXT," +
+                "finish_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, " +
+                "finish_location_name TEXT," +
+                "total_time INTEGER," +
+                "total_distance FLOAT" +
                 ");");
     }
 
