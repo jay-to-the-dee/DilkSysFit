@@ -230,7 +230,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onChange(boolean selfChange, Uri uri) {
             super.onChange(selfChange, uri);
-            Log.d("onChange", uri.getQuery());
+            Log.d("onChange", "uri: " + uri.getLastPathSegment()); //Works
+            //TODO: Implement GUI update on call
         }
     }
 }

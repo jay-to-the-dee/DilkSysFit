@@ -21,7 +21,7 @@ public class RunDBProvider extends ContentProvider {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         uriMatcher.addURI(RunDBContract.AUTHORITY, "point_data/lastEntry", 1);
         uriMatcher.addURI(RunDBContract.AUTHORITY, "point_data/#", 2);
-        uriMatcher.addURI(RunDBContract.AUTHORITY, "point_data/*", 3);
+        uriMatcher.addURI(RunDBContract.AUTHORITY, "point_data", 4);
         uriMatcher.addURI(RunDBContract.AUTHORITY, "run_summaries/#", 100);
         uriMatcher.addURI(RunDBContract.AUTHORITY, "run_summaries", 101);
     }
@@ -52,7 +52,7 @@ public class RunDBProvider extends ContentProvider {
                 return db.query(POINT_TABLE_NAME, RunDBContract.allColsPointData, null, null, null, null, RunDBContract.POINT_DATA_ID + " DESC", "1");
             case 2:
                 selection = RunDBContract.POINT_DATA_RUNID + " = " + uri.getLastPathSegment();
-            case 3:
+            case 4:
                 return db.query(POINT_TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
             case 100:
             case 101:
@@ -70,7 +70,7 @@ public class RunDBProvider extends ContentProvider {
         long id;
         switch (uriMatcher.match(uri)) {
             case 2:
-            case 3:
+            case 4:
                 id = db.insert(POINT_TABLE_NAME, null, values);
                 break;
             case 100:
