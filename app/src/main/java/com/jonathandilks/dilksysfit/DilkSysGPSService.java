@@ -108,7 +108,14 @@ public class DilkSysGPSService extends Service {
         super.onDestroy();
 
         locationManager.removeUpdates(locationListener); //Stop adding new entries to the database
-        if (mCumPointsTracked > 1) { //Don't add empty runs
+        try {
+            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            locationListener.onLocationChanged(lastKnownLocation); //Trigger last point on record stop
+        } catch (SecurityException | NullPointerException e) {
+            Log.d(getResources().getString(R.string.app_name), e.toString());
+        }
+
+        if (mCumPointsTracked > 2) { //Don't add empty runs - require at least 3 points (start + movement + end)
             generateSummaryEntry();
         }
 
@@ -118,11 +125,10 @@ public class DilkSysGPSService extends Service {
 
     private void generateSummaryEntry() {
         String locationName = null;
-        if (Geocoder.isPresent())
-        {
+        if (Geocoder.isPresent()) {
             Geocoder geocoder = new Geocoder(this, Locale.UK);
             try {
-                List<Address> finishLocationAddress = geocoder.getFromLocation(mLastLocation.getLatitude(),mLastLocation.getLongitude(),1);
+                List<Address> finishLocationAddress = geocoder.getFromLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude(), 1);
                 locationName = finishLocationAddress.get(0).getLocality();
             } catch (IOException e) {
             }
@@ -136,34 +142,52 @@ public class DilkSysGPSService extends Service {
         Date finishTime = new Date();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(finishTime);
-
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE", Locale.UK);
-        String dayString = simpleDateFormat.format(calendar.getTime());
-
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        String TODString;
-        if (hour >= 1 && hour <= 11) {
-            TODString = "Morning";
-        } else if (hour <= 15) {
-            TODString = "Afternoon";
-        } else if (hour <= 20) {
-            TODString = "Evening";
-        } else {
-            TODString = "Night";
-        }
-
-        String defaultSummaryString = dayString + " " + TODString;
-        if (locationName != null) {
-            defaultSummaryString += " run in " + locationName;
-            values.put(RunDBContract.RUN_SUMMARIES_FINISH_LOCATION_NAME, locationName);
-        }
-        values.put(RunDBContract.RUN_SUMMARIES_NAME, defaultSummaryString);
-
         long diffMs = finishTime.getTime() - mStartTime.getTime();
         long diffSeconds = TimeUnit.MILLISECONDS.toSeconds(diffMs);
         values.put(RunDBContract.RUN_SUMMARIES_TOTAL_TIME, diffSeconds);
 
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE", Locale.UK);
+        String dayString = simpleDateFormat.format(calendar.getTime());
+
+        // Get all the data we need for default name calculations
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        float avgMetresPerSecond = mCumDistanceTravelled / diffSeconds;
+
+        String defaultSummaryString = dayString + " " + getTODString(hour);
+        if (locationName != null) {
+            defaultSummaryString += " " + getPaceVerb(avgMetresPerSecond) + " in " + locationName;
+            values.put(RunDBContract.RUN_SUMMARIES_FINISH_LOCATION_NAME, locationName);
+        }
+        values.put(RunDBContract.RUN_SUMMARIES_NAME, defaultSummaryString);
+
+
         getContentResolver().insert(RunDBContract.RUN_SUMMARIES_URI, values);
+    }
+
+    public static String getTODString(int hour) {
+        if (hour >= 0 && hour <= 4) {
+            return "Midnight";
+        } else if (hour <= 11) {
+            return "Morning";
+        } else if (hour <= 15) {
+            return "Afternoon";
+        } else if (hour <= 20) {
+            return "Evening";
+        } else {
+            return "Night";
+        }
+    }
+
+    public static String getPaceVerb(float avgMetresPerSecond) {
+        if (avgMetresPerSecond < 1.6) {
+            return "walk";//<~5.8 km/h
+        } else if (avgMetresPerSecond < 2.3) {
+            return "jog"; //<~8.5 km/h
+        } else if (avgMetresPerSecond < 4.2) {
+            return "run"; //<~15 km/h
+        } else {
+            return "sprint";
+        }
     }
 
     @Nullable
