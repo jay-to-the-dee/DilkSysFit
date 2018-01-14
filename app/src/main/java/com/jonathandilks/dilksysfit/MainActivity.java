@@ -230,8 +230,15 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onChange(boolean selfChange, Uri uri) {
             super.onChange(selfChange, uri);
-            Log.d("onChange", "uri: " + uri.getLastPathSegment()); //Works
-            //TODO: Implement GUI update on call
+
+            switch(uri.getPathSegments().get(0))
+            {
+                case "point_data":
+                    //TODO: Implement GUI update on call
+                case "run_summaries":
+                    //TODO: Implement GUI update on call
+            }
+
         }
     }
 }

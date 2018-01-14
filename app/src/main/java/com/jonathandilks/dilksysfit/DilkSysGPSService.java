@@ -7,6 +7,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -18,9 +20,11 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -106,12 +110,20 @@ public class DilkSysGPSService extends Service {
     }
 
     private void generateSummaryEntry() {
-        String locationName = "Radford"; //TODO: Get from GPS
+        String locationName = null;
+        if (Geocoder.isPresent())
+        {
+            Geocoder geocoder = new Geocoder(this, Locale.UK);
+            try {
+                List<Address> finishLocationAddress = geocoder.getFromLocation(mLastLocation.getLatitude(),mLastLocation.getLongitude(),1);
+                locationName = finishLocationAddress.get(0).getLocality();
+            } catch (IOException e) {
+            }
+        }
 
         ContentValues values = new ContentValues();
 
         values.put(RunDBContract.RUN_SUMMARIES_ID, mRunID);
-        values.put(RunDBContract.RUN_SUMMARIES_FINISH_LOCATION_NAME, locationName);
         values.put(RunDBContract.RUN_SUMMARIES_ID_TOTAL_DISTANCE, mCumDistanceTravelled);
 
         Date finishTime = new Date();
@@ -133,7 +145,11 @@ public class DilkSysGPSService extends Service {
             TODString = "Night";
         }
 
-        String defaultSummaryString = dayString + " " + TODString + " run in " + locationName;
+        String defaultSummaryString = dayString + " " + TODString;
+        if (locationName != null) {
+            defaultSummaryString += " run in " + locationName;
+            values.put(RunDBContract.RUN_SUMMARIES_FINISH_LOCATION_NAME, locationName);
+        }
         values.put(RunDBContract.RUN_SUMMARIES_NAME, defaultSummaryString);
 
         long diffMs = finishTime.getTime() - mStartTime.getTime();
@@ -164,7 +180,7 @@ public class DilkSysGPSService extends Service {
             values.put(RunDBContract.POINT_DATA_ALTITUDE, location.getAltitude());
             getContentResolver().insert(RunDBContract.POINT_DATA_URI, values);
 
-            if (mLastLocation!=null) {
+            if (mLastLocation != null) {
                 mCumDistanceTravelled += location.distanceTo(mLastLocation);
             }
             mLastLocation = location;
