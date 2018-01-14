@@ -1,4 +1,6 @@
 Icons from The Android Open Source Project, Inc. at https://developer.android.com/samples/MediaRouter/index.html
+and
+Material icons at https://material.io/icons/
 
 
 Licensed under Creative Commons Attribution 2.5/ Apache License

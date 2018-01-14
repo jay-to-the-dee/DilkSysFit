@@ -21,12 +21,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
+
     private TextView mTextMessage;
+    private LinearLayout mMapLayout;
+
     private Menu menu;
     private Intent dilkSysGPSServiceIntent;
     private UIUpdateReceiver uiUpdateReceiver;
@@ -38,15 +43,20 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            mTextMessage.setVisibility(View.GONE);
+            mMapLayout.setVisibility(View.GONE);
+
             switch (item.getItemId()) {
                 case R.id.navigation_home:
+                    mTextMessage.setVisibility(View.VISIBLE);
                     mTextMessage.setText(R.string.title_home);
                     return true;
-                case R.id.navigation_dashboard:
-                    mTextMessage.setText(R.string.title_dashboard);
+                case R.id.navigation_current_run:
+                    mMapLayout.setVisibility(View.VISIBLE);
                     return true;
-                case R.id.navigation_notifications:
-                    mTextMessage.setText(R.string.title_notifications);
+                case R.id.navigation_run_history:
+                    mTextMessage.setVisibility(View.VISIBLE);
+                    mTextMessage.setText(R.string.title_run_history);
                     return true;
             }
             return false;
@@ -59,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mTextMessage = (TextView) findViewById(R.id.message);
+        mMapLayout = findViewById(R.id.map_layout);
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 

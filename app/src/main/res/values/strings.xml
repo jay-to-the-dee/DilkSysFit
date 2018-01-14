@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">DilkSysFit</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_home">Summary</string>
+    <string name="title_current_run">Current Run</string>
+    <string name="title_run_history">Past Runs</string>
 
     <string name="gps_record_start">Start Tracking</string>
     <string name="gps_record_stop">Stop Tracking</string>
@@ -10,4 +10,5 @@
     <string name="please_enable_location_services">Please enable all GPS/Location Services for best available accuracy.</string>
     <string name="notification_title">DilkSysFit is now recording your run</string>
     <string name="notification_explanation">DilkSysFit is now tracking and record your GPS location as you move.</string>
+    <string name="title_activity_maps">Map</string>
 </resources>
