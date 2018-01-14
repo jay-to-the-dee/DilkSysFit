@@ -18,4 +18,13 @@ public class RunDBContract {
 
     public static final String CONTENT_TYPE_SINGLE = "vnd.android.cursor.item/RunDBProvider.data.text";
     public static final String CONTENT_TYPE_MULTIPLE = "vnd.android.cursor.dir/RunDBProvider.data.text";
+
+    public static final String[] allCols = {
+            _POINTID,
+            RUN_RUNID,
+            RUN_TIMESTAMP,
+            RUN_LATITUDE,
+            RUN_LONGITUDE,
+            RUN_ALTITUDE
+    };
 }
