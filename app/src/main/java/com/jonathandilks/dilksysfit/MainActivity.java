@@ -28,7 +28,7 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import javax.xml.datatype.Duration;
+import com.google.android.gms.maps.MapFragment;
 
 public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mSummaryText;
     private LinearLayout mMapLayout;
+    private MapFragment mCurrentRunMapFragment;
     private ListView mRunList;
     private BottomNavigationView mNavigation;
     private MenuItem mGPSRecordStartButton;
@@ -305,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
 
             switch (uri.getPathSegments().get(0)) {
                 case "point_data":
-                    //TODO: Implement GUI update on call
+                    //TODO: Implement GUI update on call to map
                 case "run_summaries":
                     mAdapter.changeCursor(getRunSummariesCursor());
             }
