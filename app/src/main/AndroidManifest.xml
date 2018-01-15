@@ -39,6 +39,14 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
+
+        <activity
+            android:name=".ViewPreviousRunActivity"
+            android:label="@string/title_activity_view_previous_run">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.jonathandilks.dilksysfit.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

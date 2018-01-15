@@ -11,4 +11,5 @@
     <string name="notification_title">DilkSysFit is now recording your run</string>
     <string name="notification_explanation">DilkSysFit is now tracking and record your GPS location as you move.</string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_view_previous_run">View Run</string>
 </resources>

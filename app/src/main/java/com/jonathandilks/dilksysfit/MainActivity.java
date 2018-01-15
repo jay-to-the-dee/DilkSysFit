@@ -22,6 +22,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -32,6 +33,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
+    private static final int VIEW_RUN_REQUEST_CODE = 2;
     private static final String READY_TO_RECORD = "readyToRecord";
 
     private TextView mSummaryText;
@@ -149,6 +151,17 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mRunList.setAdapter(mAdapter);
+        mRunList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Bundle bundle = new Bundle();
+                bundle.putLong("id", id);
+
+                Intent intent = new Intent(MainActivity.this, ViewPreviousRunActivity.class);
+                intent.putExtras(bundle);
+                startActivityForResult(intent, VIEW_RUN_REQUEST_CODE);
+            }
+        });
 
         //Variable setting
         mNavigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
