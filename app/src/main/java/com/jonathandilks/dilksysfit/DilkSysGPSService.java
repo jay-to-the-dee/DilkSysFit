@@ -71,7 +71,6 @@ public class DilkSysGPSService extends Service {
 
     @Override
     public void onCreate() {
-
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new MyLocationListener();
         Location lastKnownLocation;

@@ -24,7 +24,7 @@ import java.util.LinkedList;
 public class CurrentRunMapFragment extends MapFragment implements OnMapReadyCallback {
     private GoogleMap googleMap;
     private PolylineOptions mRoutePolyOptions;
-    private LinkedList<Polyline> mPolylines;
+    private Polyline mPolyline;
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -55,27 +55,22 @@ public class CurrentRunMapFragment extends MapFragment implements OnMapReadyCall
     }
 
     public void addPoint(LatLng latLng) {
-        Log.d("GMAP: ", latLng.toString());
-
         if (mRoutePolyOptions == null) {
             mRoutePolyOptions = new PolylineOptions();
         }
-        if (mPolylines == null) {
-            mPolylines = new LinkedList<>();
-        }
 
         mRoutePolyOptions.add(latLng);
-        mPolylines.add(googleMap.addPolyline(mRoutePolyOptions));
+        if (mPolyline != null) {
+            mPolyline.remove();
+        }
+        mPolyline = googleMap.addPolyline(mRoutePolyOptions);
     }
 
     public void clearAllPoints() {
-        if (mPolylines != null) {
-            mPolylines.remove();
-            for (Polyline line : mPolylines) {
-                line.remove();
-            }
-            mPolylines.clear();
+        if (mPolyline != null) {
+            mPolyline.remove();
         }
+        mPolyline = null;
         mRoutePolyOptions = null;
     }
 
