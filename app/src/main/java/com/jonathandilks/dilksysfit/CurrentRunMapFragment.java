@@ -1,13 +1,11 @@
 package com.jonathandilks.dilksysfit;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
