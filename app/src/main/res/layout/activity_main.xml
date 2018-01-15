@@ -35,7 +35,7 @@
 
             <fragment
                 android:id="@+id/current_run_fragment"
-                class="com.google.android.gms.maps.MapFragment"
+                class="com.jonathandilks.dilksysfit.CurrentRunMapFragment"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
         </LinearLayout>

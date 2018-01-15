@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -29,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
 
 public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
@@ -36,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mSummaryText;
     private LinearLayout mMapLayout;
-    private MapFragment mCurrentRunMapFragment;
+    private CurrentRunMapFragment mCurrentRunMapFragment;
     private ListView mRunList;
     private BottomNavigationView mNavigation;
     private MenuItem mGPSRecordStartButton;
@@ -83,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
         mSummaryText = findViewById(R.id.summary_text);
         mMapLayout = findViewById(R.id.map_layout);
         mRunList = findViewById(R.id.run_list);
+        mCurrentRunMapFragment = (CurrentRunMapFragment) getFragmentManager().findFragmentById(R.id.current_run_fragment);
 
         String displayCols[] = new String[]
                 {
@@ -213,13 +216,11 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onResume() {
         super.onResume();
-
-        //TODO: Find a way to get current service running status
-
         if (uiUpdateReceiver == null)
             uiUpdateReceiver = new UIUpdateReceiver();
         IntentFilter intentFilter = new IntentFilter(DilkSysGPSServiceTask.SERVICE_STARTED);
         intentFilter.addAction(DilkSysGPSServiceTask.SERVICE_STOPPED);
+        intentFilter.addAction(DilkSysGPSServiceTask.LOCATION_CHANGED);
         LocalBroadcastManager.getInstance(this).registerReceiver(uiUpdateReceiver, intentFilter);
 
         if (runUpdateObserver == null)
@@ -268,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
 
     private class UIUpdateReceiver extends BroadcastReceiver {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, final Intent intent) {
             switch (intent.getAction()) {
                 case DilkSysGPSServiceTask.SERVICE_STARTED:
                     h.post(new Runnable() {
@@ -283,6 +284,18 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             updateGpsRecordUI(true);
+                        }
+                    });
+                    break;
+                case DilkSysGPSServiceTask.LOCATION_CHANGED:
+                    h.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Bundle extras = intent.getExtras();
+                            double lat = extras.getDouble("lat");
+                            double lng = extras.getDouble("lng");
+
+                            mCurrentRunMapFragment.addPoint(new LatLng(lat, lng));
                         }
                     });
                     break;
@@ -305,10 +318,9 @@ public class MainActivity extends AppCompatActivity {
             super.onChange(selfChange, uri);
 
             switch (uri.getPathSegments().get(0)) {
-                case "point_data":
-                    //TODO: Implement GUI update on call to map
                 case "run_summaries":
                     mAdapter.changeCursor(getRunSummariesCursor());
+                    break;
             }
 
         }

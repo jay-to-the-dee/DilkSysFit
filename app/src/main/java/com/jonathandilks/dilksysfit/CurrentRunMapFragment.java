@@ -6,12 +6,14 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -25,7 +27,14 @@ public class CurrentRunMapFragment extends MapFragment implements OnMapReadyCall
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {
+        UiSettings uiSettings = googleMap.getUiSettings();
+        uiSettings.setZoomControlsEnabled(true);
+        uiSettings.setCompassEnabled(true);
+        uiSettings.setIndoorLevelPickerEnabled(false);
+
         try {
+            googleMap.setMyLocationEnabled(true); //Add current location dot and button
+
             LocationManager locationManager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, new MapZoomLocationListener(googleMap), null);
         } catch (SecurityException | NullPointerException e) {
@@ -35,6 +44,11 @@ public class CurrentRunMapFragment extends MapFragment implements OnMapReadyCall
             new MapZoomLocationListener(googleMap).setGMapCallback(new LatLng(lat, lng));
         }
     }
+
+    public void addPoint(LatLng latLng) {
+        Log.d("GMAP: ",latLng.toString());
+    }
+
 
     private class MapZoomLocationListener implements LocationListener {
         private final GoogleMap googleMap;

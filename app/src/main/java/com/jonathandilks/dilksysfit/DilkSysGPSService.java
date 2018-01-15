@@ -135,7 +135,6 @@ public class DilkSysGPSService extends Service {
         }
 
         ContentValues values = new ContentValues();
-
         values.put(RunDBContract.RUN_SUMMARIES_ID, mRunID);
         values.put(RunDBContract.RUN_SUMMARIES_ID_TOTAL_DISTANCE, mCumDistanceTravelled);
 
@@ -166,15 +165,15 @@ public class DilkSysGPSService extends Service {
 
     public static String getTODString(int hour) {
         if (hour >= 0 && hour <= 4) {
-            return "Midnight";
+            return "midnight";
         } else if (hour <= 11) {
-            return "Morning";
+            return "morning";
         } else if (hour <= 15) {
-            return "Afternoon";
+            return "afternoon";
         } else if (hour <= 20) {
-            return "Evening";
+            return "evening";
         } else {
-            return "Night";
+            return "night";
         }
     }
 
@@ -203,7 +202,14 @@ public class DilkSysGPSService extends Service {
     private class MyLocationListener implements LocationListener {
         @Override
         public void onLocationChanged(Location location) {
-            //Log entry to DB here
+            //Update UI with broadcast
+            Intent locationChangedIntent = new Intent(DilkSysGPSServiceTask.LOCATION_CHANGED);
+            locationChangedIntent.putExtra("lat", location.getLatitude());
+            locationChangedIntent.putExtra("lng", location.getLongitude());
+            locationChangedIntent.putExtra("ele", location.getAltitude());
+            LocalBroadcastManager.getInstance(DilkSysGPSService.this).sendBroadcast(locationChangedIntent);
+
+            //Log entry to DB
             ContentValues values = new ContentValues();
             values.put(RunDBContract.POINT_DATA_RUNID, mRunID);
             values.put(RunDBContract.POINT_DATA_LATITUDE, location.getLatitude());
