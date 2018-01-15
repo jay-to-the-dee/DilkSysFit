@@ -16,7 +16,6 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -29,7 +28,6 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 public class MainActivity extends AppCompatActivity {
@@ -204,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
         item.setEnabled(false);
         item.getIcon().setColorFilter(Color.LTGRAY, PorterDuff.Mode.SRC_IN); //Disable until next update
 
+        mCurrentRunMapFragment.clearAllPoints(); //Clear previous route
         checkPermissionAndStartGPSservice();
     }
 

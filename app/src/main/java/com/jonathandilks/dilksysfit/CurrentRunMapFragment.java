@@ -16,17 +16,26 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.LinkedList;
 
 public class CurrentRunMapFragment extends MapFragment implements OnMapReadyCallback {
+    private GoogleMap googleMap;
+    private PolylineOptions mRoutePolyOptions;
+    private LinkedList<Polyline> mPolylines;
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        mRoutePolyOptions = null;
         this.getMapAsync(this);
     }
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {
+        this.googleMap = googleMap;
         UiSettings uiSettings = googleMap.getUiSettings();
         uiSettings.setZoomControlsEnabled(true);
         uiSettings.setCompassEnabled(true);
@@ -46,7 +55,28 @@ public class CurrentRunMapFragment extends MapFragment implements OnMapReadyCall
     }
 
     public void addPoint(LatLng latLng) {
-        Log.d("GMAP: ",latLng.toString());
+        Log.d("GMAP: ", latLng.toString());
+
+        if (mRoutePolyOptions == null) {
+            mRoutePolyOptions = new PolylineOptions();
+        }
+        if (mPolylines == null) {
+            mPolylines = new LinkedList<>();
+        }
+
+        mRoutePolyOptions.add(latLng);
+        mPolylines.add(googleMap.addPolyline(mRoutePolyOptions));
+    }
+
+    public void clearAllPoints() {
+        if (mPolylines != null) {
+            mPolylines.remove();
+            for (Polyline line : mPolylines) {
+                line.remove();
+            }
+            mPolylines.clear();
+        }
+        mRoutePolyOptions = null;
     }
 
 
